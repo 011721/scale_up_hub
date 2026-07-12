@@ -1,0 +1,41 @@
+name: Build APK and EXE
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: 📦 Installer les dépendances
+        run: flutter pub get
+
+      - name: 🤖 Générer les fichiers de base de données (Drift)
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: 📱 Construire l'APK (Android)
+        run: flutter build apk --release
+
+      - name: 💻 Construire l'EXE (Windows)
+        run: flutter build windows --release
+
+      - name: 📤 Upload des artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: scale-up-hub-build
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/windows/runner/Release/
